@@ -1,0 +1,148 @@
+<style>
+.dot {
+    fill: red;
+}
+.dot.child {
+    opacity: 0.5;
+}
+
+.dot.man {
+    opacity: 0.75
+}
+
+.dot.woman {
+    opacity: 0.25
+}
+
+.dot.youth {
+    opacity: 1
+}
+</style>
+<div id="controls">
+</div>
+<div id="viz"></div>
+<script src="d3/d3.min.js"></script>
+<script>
+var illiteracyData = {
+    'Naivasha': {
+        town: 'Naivasha',
+        child: 15,
+        youth: 30,
+        man: 30,
+        woman: 25
+    },
+    'Molo': {
+        town: 'Molo',
+        child: 10,
+        youth: 40,
+        man: 20,
+        woman: 30
+    }
+};
+
+/**
+ * generates an random array of individual data points based on the
+ * the percentage counts of the different categories
+ * in the specified town data
+ * @param {object} data
+ * @return {array}
+ */
+function generateDatapointsForTown (data) {
+    var categories = ['child', 'youth', 'man', 'woman'];
+    var datapoints = categories.reduce(function(points, cat) {
+        var categoryPoints = generateDatapointsForCategory(data, cat);
+        return d3.merge([points, categoryPoints]);
+    }, []);
+    return d3.shuffle(datapoints);
+}
+
+/**
+ * generates an array of individual data points for
+ * a given category based on its proportion in the
+ * counts of a particular town
+ * @param {object} data town data
+ * @param {string} category
+ * @return {array}
+ */
+function generateDatapointsForCategory (data, category) {
+    var count = data[category];
+    return d3.range(count).map(function (i) {
+        return {
+            category: category,
+            key: category + '_' +  i,
+            size: count
+        }
+    });
+}
+</script>
+
+<script>
+var width = 600;
+var height = 300;
+</script>
+<script>
+var root = d3.select("#viz");
+var viz = root.append('svg')
+    .style('display', 'block')
+    .attr('width', width)
+    .attr('height', height);
+</script>
+<script>
+var rScale = d3.scaleLinear()
+    .domain([0, 30])
+    .range([0, 7]);
+var xScale = d3.scaleLinear()
+    .domain([0, 1])
+    .range([30, width-30]);
+
+var yScale = d3.scaleLinear()
+    .range([30, height-30]);
+
+// var data = generateDatapointsForTown(illiteracyData.Naivasha);
+
+
+
+function renderData(data) {
+    var dots = viz.selectAll('circle.dot').data(data, function (d) {return d.key})
+    var newDots = dots.enter().append('circle')
+    .classed('dot', true)
+    .attr('cx', xScale(0.5))
+    .attr('cy', yScale(0.5))
+    .attr('r', rScale(0));
+
+    viz.selectAll('circle.dot').data(data, function(d) {return d.key})
+    .classed('child', function (d) { return d.category === 'child'})
+    .classed('youth', function (d) { return d.category === 'youth'})
+    .classed('man', function (d) { return d.category === 'man'})
+    .classed('woman', function (d) { return d.category === 'woman'})
+    .transition()
+    .duration(1000)
+    .attr('cx', function (d) {
+        return xScale(Math.random());
+    })
+    .attr('cy', function () {
+        return yScale(Math.random());
+    })
+    .attr('r', function (d) { return rScale(d.size) });
+
+    dots.exit()
+    .remove();
+}
+
+</script>
+<script>
+d3.select("#controls")
+    .append('select')
+    .on('change', function (e) {
+        var town = this.value;
+        var townData = illiteracyData[town];
+        var data = generateDatapointsForTown(townData);
+        renderData(data);
+    })
+    .selectAll('option').data(Object.keys(illiteracyData))
+    .enter()
+    .append('option')
+    .text(String)
+    .attr('value', String);
+
+</script>
