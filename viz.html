@@ -19,8 +19,15 @@
     opacity: 1
 }
 </style>
+<style>
+/* legend css */
+.legend.town.active {
+    font-weight: bold;
+}
+</style>
 <div id="controls">
 </div>
+<div id="legend"></div>
 <div id="viz"></div>
 <script src="d3/d3.min.js"></script>
 <script>
@@ -79,7 +86,9 @@ function generateDatapointsForCategory (data, category) {
 }
 
 </script>
+
 <script>
+/** DOTS VIZUALIZATION **/
 var width = 700;
 var height = 300;
 </script>
@@ -129,12 +138,12 @@ var wobbleInterval;
  * based on the specified data
  * @param {array} data array containing each data point/dot
  */
-function renderData(data) {
+function renderTownData(data) {
     // clear wobble effect
     wobbleInterval && wobbleInterval.stop();
 
     // collapse current data set
-    implodeDots();
+    // implodeDots();
 
     setTimeout(function () {
         var dots = viz.selectAll('circle.dot').data(data, function (d) {return d.key})
@@ -184,13 +193,14 @@ function renderData(data) {
 
 </script>
 <script>
+/** LEGEND ANIMATION **/
 d3.select("#controls")
     .append('select')
     .on('change', function (e) {
         var town = this.value;
         var townData = illiteracyData[town];
         var data = generateDatapointsForTown(townData);
-        renderData(data);
+        renderTownData(data);
     })
     .selectAll('option').data(Object.keys(illiteracyData))
     .enter()
@@ -198,4 +208,65 @@ d3.select("#controls")
     .text(String)
     .attr('value', String);
 
+// renderLegend(illiteracyData, 'Naivasha');
+
+function renderLegend (data, activeTown) {
+    data = d3.values(data);
+    var towns = d3.select('#legend')
+        .selectAll('.legend.town').data(data);
+    towns.exit().remove();
+    var newTowns = towns.enter()
+        .append('div')
+        .classed('legend', true)
+        .classed('town', true);
+    newTowns
+        .append('span')
+        .attr('class', 'title');
+    towns = towns.merge(newTowns);
+    towns
+        .classed('active', function (data) {
+            return data.town === activeTown
+        })
+        .select('span.title')
+        .text(function (data) { return data.town });
+}
+
+</script>
+<script>
+/* VISUALIZATION LOOP */
+
+vizLoop(illiteracyData, 5000);
+
+/**
+ * render vizualization, including legend,
+ * setting the town at the specified index
+ * as active
+ * @param {object} array
+ * @param {number} activeIndex
+ */
+function renderViz (data, activeIndex) {
+    var townData = data[activeIndex];
+    var town = townData.town;
+    var dots = generateDatapointsForTown(townData);
+    renderLegend(data, town);
+    renderTownData(dots);
+}
+
+/**
+ * render the vizualization in a loop,
+ * changing the active town after the
+ * specified interval
+ * @param {object} data
+ * @param {number} interval
+ */
+function vizLoop (data, interval) {
+    data = d3.values(data);
+    // show the viz the first time
+    renderViz(data, 0);
+    var index = 1;
+    d3.interval(function () {
+        renderViz(data, index);
+        index = (index + 1) % data.length;
+    }, interval);
+}
 </script>
