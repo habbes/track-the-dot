@@ -1,0 +1,115 @@
+<div id="pie"></div>
+<script src="d3/d3.js"></script>
+<script>
+var illiteracyData = {
+    'Naivasha': {
+        town: 'Naivasha',
+        child: 10,
+        youth: 35,
+        man: 30,
+        woman: 25
+    },
+    'Molo': {
+        town: 'Molo',
+        child: 10,
+        youth: 40,
+        man: 20,
+        woman: 30
+    }
+};
+
+/**
+    * generates an random array of individual data points based on the
+    * the percentage counts of the different categories
+    * in the specified town data
+    * @param {object} data
+    * @return {array}
+    */
+function generateDatapointsForTown (data) {
+    var categories = ['child', 'youth', 'man', 'woman'];
+    var datapoints = categories.reduce(function(points, cat) {
+        var categoryPoints = generateDatapointsForCategory(data, cat);
+        return d3.merge([points, categoryPoints]);
+    }, []);
+    return d3.shuffle(datapoints);
+}
+
+/**
+    * generates an array of individual data points for
+    * a given category based on its proportion in the
+    * counts of a particular town
+    * @param {object} data town data
+    * @param {string} category
+    * @return {array}
+    */
+function generateDatapointsForCategory (data, category) {
+    var count = data[category];
+    return d3.range(count).map(function (i) {
+        return {
+            category: category,
+            key: category + '_' +  i,
+            size: count,
+            cx: Math.random(),
+            cy: Math.random()
+        }
+    });
+}
+
+</script>
+<script>
+var width = 700;
+var height = 300;
+var mainRadius = Math.min(width, height) / 2;
+</script>
+<script>
+var root = d3.select("#pie");
+var svg = root.append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+function getTransform (width, height, rotate) {
+    rotate = rotate || 0;
+    return 'translate(' + (width/2) + ',' + (height/2) + ')'
+        + ' rotate(90)'
+        + ' rotate(' + rotate + ')';
+}
+
+var g = svg.append('g');
+
+var data = [{key: "rest", value: 70}, {key: 'target', value: 50}];
+var pie = d3.pie()
+    .sort(function (a, b) { return b - a})
+    .value(function (d) { return d.value });
+
+var path = d3.arc()
+    .outerRadius(mainRadius)
+    .innerRadius(0);
+
+pieData = pie(data);
+var arc = g.selectAll('.arc')
+    .data(pieData)
+    .enter().append('g')
+        .attr('class', 'arc');
+function getRotation (pieData) {
+    var target = pieData.find(e => e.data.key == 'target');
+    var total = d3.sum(pieData, d => d.value);
+    var angle = (target.endAngle = target.startAngle) / 2;
+    // return angle + 'rad';
+    return 180 * target.value/total;
+}
+var rotation = getRotation(pieData);
+var transform = getTransform(width, height, rotation);
+console.log(transform);
+
+g.transition().duration(1000).attr('transform', transform);
+arc.append('path')
+    .attr('d', path)
+    .attr('fill', function (d) { 
+        return d.data.key === 'rest'? 'red' : 'white';
+    });
+</script>
+<script>
+function generateSectorDots () {
+
+}
+</script>
