@@ -104,7 +104,7 @@ function getRotation (pieData) {
     return 180 * target.value / total;
 }
 
-var data = [{key: "rest", value: 90}, {key: 'target', value: 10}];
+var data = [{key: "rest", value: 70}, {key: 'target', value: 30}];
 var pie = d3.pie()
     .sort(function (a, b) { return b.value - a.value})
     .value(function (d) { return d.value });
@@ -170,11 +170,11 @@ renderPie(data);
 function sectorCoordGenerator (radius, startAngle, endAngle) {
     var angle = (endAngle  - startAngle) / 2;
     var maxY = radius * Math.sin(angle);
-    var minY = 0;
+    var minY = -maxY;
     console.log('y range', minY, maxY);
     var getRandomY = d3.randomUniform(minY, maxY);
     var getRandomX = function (y) {
-        var minX = y/Math.tan(angle);
+        var minX = Math.abs(y)/Math.tan(angle);
         var maxX = Math.sqrt(radius*radius - y*y);
         return d3.randomUniform(minX, maxX)();
     }
