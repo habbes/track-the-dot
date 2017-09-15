@@ -48,8 +48,8 @@ function getPieRotationTransform (angle) {
  * @return {number} the angle for rotation
  */
 function getPieRotationAngle (pieData) {
-    var target = pieData.find(d => d.data.key === 'target');
-    var total = d3.sum(pieData, d => d.value);
+    var target = pieData.find(function (d) { return d.key === 'target'; });
+    var total = d3.sum(pieData, function (d) { return d.value; });
     return 180 * target.value / total;
 }
 
@@ -68,16 +68,15 @@ function sectorCoordGenerator (radius, startAngle, endAngle) {
     var angle = (endAngle  - startAngle) / 2;
     var maxY = radius * Math.sin(angle);
     var minY = -maxY;
-    console.log('y range', minY, maxY);
     var getRandomY = d3.randomUniform(minY, maxY);
-    var getRandomX = function (y) {
+    var getRandomXForY = function (y) {
         var minX = Math.abs(y)/Math.tan(angle);
         var maxX = Math.sqrt(radius*radius - y*y);
         return d3.randomUniform(minX, maxX)();
     }
     return function () {
         var y = getRandomY();
-        var x = getRandomX(y);
+        var x = getRandomXForY(y);
         return {
             x: x,
             y: y
@@ -93,7 +92,7 @@ function sectorCoordGenerator (radius, startAngle, endAngle) {
  * @return {array}
  */
 function generateSectorDots (pieData, radius) {
-    var target = pieData.find(e => e.data.key === 'target');
+    var target = pieData.find(function (d) { return d.data.key === 'target'});
     var getRandomCoords = sectorCoordGenerator(radius, target.startAngle, target.endAngle);
     var dots = d3.range(target.value).map(function (d, i) {
        var dot = getRandomCoords();
@@ -184,8 +183,6 @@ function renderDots (pieData) {
             return d.y;
         })
         .attr('r', 2);
-    
-
 }
 </script>
 <script>
