@@ -25,8 +25,6 @@
     font-weight: bold;
 }
 </style>
-<div id="controls">
-</div>
 <div id="legend"></div>
 <div id="viz"></div>
 <script src="d3/d3.min.js"></script>
@@ -130,86 +128,90 @@ function implodeDots () {
         });
 }
 
-// the handle for the wobble effect inverval
-var wobbleInterval;
-
 /**
- * render dots vizualization
- * based on the specified data
- * @param {array} data array containing each data point/dot
+ * returns a function that renders dots vizualization
+ * based on specified data
  */
-function renderTownData(data) {
-    // clear wobble effect
-    wobbleInterval && wobbleInterval.stop();
+function makeDotVizualizer () {
+    // wrap the function in a closure so
+    // that the wobbleInterval handle is not
+    // exposed in the global namespace
 
-    // collapse current data set
-    // implodeDots();
+    // the handle for the wobble effect inverval
+    var wobbleInterval;
 
-    setTimeout(function () {
-        var dots = viz.selectAll('circle.dot').data(data, function (d) {return d.key})
+    /**
+    * render dots vizualization
+    * based on the specified data
+    * @param {array} data array containing each data point/dot
+    */
+    return function(data) {
+        // clear wobble effect
+        wobbleInterval && wobbleInterval.stop();
 
-        dots.exit()
-        .remove();
+        // collapse current data set
+        // implodeDots();
 
-        // explode new dots from the center
-        var newDots = dots.enter().append('circle')
-        .classed('dot', true)
-        .attr('cx', xScale(0.5))
-        .attr('cy', yScale(0.5))
-        .attr('r', rScale(0));
+        setTimeout(function () {
+            var dots = viz.selectAll('circle.dot').data(data, function (d) {return d.key})
 
-        dots = dots.merge(newDots);
-        dots
-        .classed('child', function (d) { return d.category === 'child'})
-        .classed('youth', function (d) { return d.category === 'youth'})
-        .classed('man', function (d) { return d.category === 'man'})
-        .classed('woman', function (d) { return d.category === 'woman'})
-        .transition()
-        .duration(500)
-        .attr('cx', function (d) {
-            return xScale(d.cx);
-        })
-        .attr('cy', function (d) {
-            return yScale(d.cy);
-        })
-        .attr('r', function (d) { return rScale(d.size) });
+            dots.exit()
+            .remove();
 
-        // make the dots wobble around their positions
-        wobbleInterval = d3.interval(function () {
-            viz.selectAll('circle.dot').data(data, function(d) {return d.key})
-                .transition()
-                .ease(d3.easeLinear)
-                .duration(500)
-                .attr('cx', function (d) {
-                    return xScale(d.cx ) + deltaScale(Math.random());
-                })
-                .attr('cy', function (d) {
-                    return yScale(d.cy) +  deltaScale(Math.random());
-                })
-        }, 500);
-    }, 1000);
-    
+            // explode new dots from the center
+            var newDots = dots.enter().append('circle')
+            .classed('dot', true)
+            .attr('cx', xScale(0.5))
+            .attr('cy', yScale(0.5))
+            .attr('r', rScale(0));
+
+            dots = dots.merge(newDots);
+            dots
+            .classed('child', function (d) { return d.category === 'child'})
+            .classed('youth', function (d) { return d.category === 'youth'})
+            .classed('man', function (d) { return d.category === 'man'})
+            .classed('woman', function (d) { return d.category === 'woman'})
+            .transition()
+            .duration(500)
+            .attr('cx', function (d) {
+                return xScale(d.cx);
+            })
+            .attr('cy', function (d) {
+                return yScale(d.cy);
+            })
+            .attr('r', function (d) { return rScale(d.size) });
+
+            // make the dots wobble around their positions
+            wobbleInterval = d3.interval(function () {
+                viz.selectAll('circle.dot').data(data, function(d) {return d.key})
+                    .transition()
+                    .ease(d3.easeLinear)
+                    .duration(500)
+                    .attr('cx', function (d) {
+                        return xScale(d.cx ) + deltaScale(Math.random());
+                    })
+                    .attr('cy', function (d) {
+                        return yScale(d.cy) +  deltaScale(Math.random());
+                    })
+            }, 500);
+        }, 1000);   
+    }
 }
+
+var renderTownData = makeDotVizualizer()
 
 </script>
 <script>
 /** LEGEND ANIMATION **/
-d3.select("#controls")
-    .append('select')
-    .on('change', function (e) {
-        var town = this.value;
-        var townData = illiteracyData[town];
-        var data = generateDatapointsForTown(townData);
-        renderTownData(data);
-    })
-    .selectAll('option').data(Object.keys(illiteracyData))
-    .enter()
-    .append('option')
-    .text(String)
-    .attr('value', String);
 
 // renderLegend(illiteracyData, 'Naivasha');
 
+/**
+ * renders the legend and makes
+ * the specified town active
+ * @param {object} data
+ * @param {string} activeTown
+ */
 function renderLegend (data, activeTown) {
     data = d3.values(data);
     var towns = d3.select('#legend')
