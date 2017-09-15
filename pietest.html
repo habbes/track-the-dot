@@ -48,7 +48,7 @@ function getPieRotationTransform (angle) {
  * @return {number} the angle for rotation
  */
 function getPieRotationAngle (pieData) {
-    var target = pieData.find(function (d) { return d.key === 'target'; });
+    var target = pieData.find(function (d) { return d.data.key === 'target'; });
     var total = d3.sum(pieData, function (d) { return d.value; });
     return 180 * target.value / total;
 }
