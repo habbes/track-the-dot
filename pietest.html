@@ -1,172 +1,69 @@
 <div id="pie"></div>
 <script src="d3/d3.js"></script>
 <script>
-var illiteracyData = {
-    'Naivasha': {
-        town: 'Naivasha',
-        child: 10,
-        youth: 35,
-        man: 30,
-        woman: 25
-    },
-    'Molo': {
-        town: 'Molo',
-        child: 10,
-        youth: 40,
-        man: 20,
-        woman: 30
-    }
-};
-
-/**
-    * generates an random array of individual data points based on the
-    * the percentage counts of the different categories
-    * in the specified town data
-    * @param {object} data
-    * @return {array}
-    */
-function generateDatapointsForTown (data) {
-    var categories = ['child', 'youth', 'man', 'woman'];
-    var datapoints = categories.reduce(function(points, cat) {
-        var categoryPoints = generateDatapointsForCategory(data, cat);
-        return d3.merge([points, categoryPoints]);
-    }, []);
-    return d3.shuffle(datapoints);
-}
-
-/**
-    * generates an array of individual data points for
-    * a given category based on its proportion in the
-    * counts of a particular town
-    * @param {object} data town data
-    * @param {string} category
-    * @return {array}
-    */
-function generateDatapointsForCategory (data, category) {
-    var count = data[category];
-    return d3.range(count).map(function (i) {
-        return {
-            category: category,
-            key: category + '_' +  i,
-            size: count,
-            cx: Math.random(),
-            cy: Math.random()
-        }
-    });
-}
-
+var data = [{key: "rest", value: 70}, {key: 'target', value: 30}];
 </script>
 <script>
-var width = 700;
-var height = 300;
-var mainRadius = Math.min(width, height) / 2;
-</script>
-<script>
-var root = d3.select("#pie");
-var svg = root.append('svg')
-    .attr('width', width)
-    .attr('height', height);
+/**
+ * converts a data array into an array
+ * of pie data with computed startAngle, endAngle
+ * and other properties used to create arcs
+ * @param {array} data
+ * @return {array}
+ */
+ var getPieData = d3.pie()
+    .sort(function (a, b) { return b.value - a.value})
+    .value(function (d) { return d.value });
 
-var g = svg.append('g');
-var pieG = g.append('g')
-    .attr('class', 'pieG');
-
-g.append('line')
-    .attr('x1', 0)
-    .attr('y1', 0)
-    .attr('x2', 40)
-    .attr('y2', 0)
-    .attr('style', 'stroke:black;stroke-width:2');
-
-g.append('line')
-    .attr('x1', 0)
-    .attr('y1', 0)
-    .attr('x2', 0)
-    .attr('y2', 40)
-    .attr('style', 'stroke:black;stroke-width:2');
-
-function getTransform (width, height, rotate) {
-    rotate = rotate || 0;
+/**
+ * generates an svg transform to translate and scale
+ * a group to match a standard cartesian coordinate space
+ * i.e. the origin is at the center, x increases going right
+ * and y increases going down
+ * @param {number} width
+ * @param {number} height
+ * @return {string} svg transform string
+ */
+function getStandardCartesianTransform (width, height) {
     return 'translate(' + (width/2) + ',' + (height/2) + ')'
-    + ' scale(1,-1)'
-        // + ' rotate(90)'
-        // + ' rotate(' + rotate + ')'
-      
+    + ' scale(1,-1)';
 }
 
-function rotateTransform (rotate) {
-    return ' rotate(' + (90 + rotate) + ')';
+/**
+ * generates an svg transform to rotate a pie/circle
+ * by the specified angle (in degrees) from the
+ * x-axis (after a 90degree rotation)
+ * @param {number} angle
+ * @return {string} svg transform string
+ */
+function getPieRotationTransform (angle) {
+    return ' rotate(' + (90 + angle) + ')';
 }
 
-function getRotation (pieData) {
-    var target = pieData.find(e => e.data.key === 'target');
+/**
+ * compute the angle by which the pie has to be rotated relative
+ * to the x-axis so that the x-axis cuts through the middle of
+ * the target (open) sector
+ * @param {array} pieData
+ * @return {number} the angle for rotation
+ */
+function getPieRotationAngle (pieData) {
+    var target = pieData.find(d => d.data.key === 'target');
     var total = d3.sum(pieData, d => d.value);
     return 180 * target.value / total;
 }
 
-var data = [{key: "rest", value: 70}, {key: 'target', value: 30}];
-var pie = d3.pie()
-    .sort(function (a, b) { return b.value - a.value})
-    .value(function (d) { return d.value });
-
-var pathFn = d3.arc()
-    .outerRadius(mainRadius)
-    .innerRadius(0);
-
-
-// pieData = pie(data);
-// var arc = g.selectAll('.arc')
-//     .data(pieData)
-//     .enter().append('g')
-//         .attr('class', 'arc');
-// function getRotation (pieData) {
-//     var target = pieData.find(e => e.data.key == 'target');
-//     var total = d3.sum(pieData, d => d.value);
-//     var angle = (target.endAngle = target.startAngle) / 2;
-//     // return angle + 'rad';
-//     return 180 * target.value/total;
-// }
-// var rotation = getRotation(pieData);
-// var transform = getTransform(width, height, rotation);
-// console.log(transform);
-
-// g.transition().duration(1000).attr('transform', transform);
-// arc.append('path')
-//     .attr('d', path)
-//     .attr('fill', function (d) { 
-//         return d.data.key === 'rest'? 'red' : 'white';
-//     });
-</script>
-<script>
-function renderPie (data) {
-    pieData = pie(data);
-
-    var rotation = getRotation(pieData);
-    var transform = getTransform(width, height, rotation);
-    console.log('t', transform);
-    g.transition()
-        .attr('transform', transform);
-    pieG.transition()
-        .attr('transform', rotateTransform(rotation));
-    console.log(pieG);
-    var arc = pieG.selectAll('.arc')
-        .data(pieData, function (d) { return d.data.key; });
-    arc.exit().remove();
-    var newArc = arc.enter().append('g')
-        .attr('class', 'arc');
-    
-    arc = arc.merge(newArc);
-    arc.append('path')
-        .attr('d', pathFn)
-        .attr('fill', function(d) {
-            return d.data.key === 'rest'? 'red': 'white';
-        });
-}
-
-renderPie(data);
-</script>
-<script>
-
+/**
+ * returns a function with generates coordinates
+ * for dots that are constrained within the open sector
+ * of the pie
+ * @param {number} radius the radius of the pie
+ * @param {number} startAngle the start angle of the open sector in radians
+ * @param {number} endAngle the end angle of the open sector in radians
+ * @return {function} a function that, when called, returns an object
+ * {x, y} where x and y are coordinates for a random point within the
+ * specified open sector
+ */
 function sectorCoordGenerator (radius, startAngle, endAngle) {
     var angle = (endAngle  - startAngle) / 2;
     var maxY = radius * Math.sin(angle);
@@ -188,10 +85,16 @@ function sectorCoordGenerator (radius, startAngle, endAngle) {
     };
 }
 
-function generateSectorDots (data) {
-    pieData = pie(data);
+/**
+ * generate dots representing the target data
+ * to be displayed inside the open sector of the
+ * pie
+ * @param {array} pieData
+ * @return {array}
+ */
+function generateSectorDots (pieData, radius) {
     var target = pieData.find(e => e.data.key === 'target');
-    var getRandomCoords = sectorCoordGenerator(mainRadius, target.startAngle, target.endAngle);
+    var getRandomCoords = sectorCoordGenerator(radius, target.startAngle, target.endAngle);
     var dots = d3.range(target.value).map(function (d, i) {
        var dot = getRandomCoords();
        dot.key = i;
@@ -199,11 +102,74 @@ function generateSectorDots (data) {
     });
     return dots;
 }
-
 </script>
 <script>
-function renderDots (data) {
-    var dots = generateSectorDots(data);
+var width = 700;
+var height = 300;
+var mainRadius = Math.min(width, height) / 2;
+</script>
+<script>
+var root = d3.select("#pie");
+var svg = root.append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+/**
+ * top-level group, wraps children in a cartesian coord space
+ * with the origin at the center, x increasing going right
+ * and y increasing going up
+ */
+var g = svg.append('g')
+    .attr('transform', getStandardCartesianTransform(width, height));
+
+/**
+ * group containing the pie chart
+ * pie chart will be in its own group so that
+ * its rotation does not affect the rest of the children
+ */
+var pieG = g.append('g');
+
+/**
+ * function used to generate arc paths for the
+ * sectors
+ */
+var pathFn = d3.arc()
+    .outerRadius(mainRadius)
+    .innerRadius(0);
+</script>
+<script>
+/**
+ * renders the pie chart with the specified pie data
+ * @param {array} pieData data that has been passed
+ * through getPieData function
+ */
+function renderPie (pieData) {
+    var angle = getPieRotationAngle(pieData);
+    pieG.transition()
+        .attr('transform', getPieRotationTransform(angle));
+    console.log(pieG);
+    var arc = pieG.selectAll('.arc')
+        .data(pieData, function (d) { return d.data.key; });
+    arc.exit().remove();
+    var newArc = arc.enter().append('g')
+        .attr('class', 'arc');
+    
+    arc = arc.merge(newArc);
+    arc.append('path')
+        .attr('d', pathFn)
+        .attr('fill', function(d) {
+            return d.data.key === 'rest'? 'red': 'white';
+        });
+}
+
+/**
+ * render dots representing the target population
+ * in the open sector of the pie chart
+ * @param {array} pieData data that has been passed
+ * through getPieData function
+ */
+function renderDots (pieData) {
+    var dots = generateSectorDots(pieData, mainRadius);
     var circles = g.selectAll('.dot').data(dots, function (dot) { return dot.key; });
     circles.exit().remove();
     var newCircles = circles.enter().append('circle')
@@ -211,15 +177,19 @@ function renderDots (data) {
 
     circles = circles.merge(newCircles);
     circles
-        .attr('cx', function (data) {
-            return data.x;
+        .attr('cx', function (d) {
+            return d.x;
         })
-        .attr('cy', function (data) {
-            return data.y;
+        .attr('cy', function (d) {
+            return d.y;
         })
         .attr('r', 2);
     
 
 }
-renderDots(data);
+</script>
+<script>
+var pieData = getPieData(data);
+renderPie(pieData);
+renderDots(pieData);
 </script>
