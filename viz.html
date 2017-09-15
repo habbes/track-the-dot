@@ -251,18 +251,18 @@ function makeDotVizualizer () {
             .attr('r', function (d) { return rScale(d.size) });
 
             // make the dots wobble around their positions
-            // wobbleInterval = d3.interval(function () {
-            //     viz.selectAll('circle.dot').data(data, function(d) {return d.key})
-            //         .transition()
-            //         .ease(d3.easeLinear)
-            //         .duration(500)
-            //         .attr('cx', function (d) {
-            //             return xScale(d.cx ) + deltaScale(Math.random());
-            //         })
-            //         .attr('cy', function (d) {
-            //             return yScale(d.cy) +  deltaScale(Math.random());
-            //         })
-            // }, 500);
+            wobbleInterval = d3.interval(function () {
+                viz.selectAll('circle.dot').data(data, function(d) {return d.key})
+                    .transition()
+                    .ease(d3.easeLinear)
+                    .duration(500)
+                    .attr('cx', function (d) {
+                        return xScale(d.cx ) + deltaScale(Math.random());
+                    })
+                    .attr('cy', function (d) {
+                        return yScale(d.cy) +  deltaScale(Math.random());
+                    })
+            }, 500);
         }, 1000);   
     }
 }
