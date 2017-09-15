@@ -1,5 +1,49 @@
+<!doctype html>
 <style>
-/* vizualization css */
+/* PAGE LAYOUT CSS */
+
+#vizSection {
+    font-family: Helvetica;
+}
+
+#vizSection header {
+    text-transform: uppercase;
+    margin-bottom: 80px;
+    font-size: 20px;
+    color: #2b2c2c;
+}
+
+.strong-overview {
+    font-weight: bold;
+    color: #535553;
+    margin-bottom: 25px;
+}
+
+.strong-pct {
+    font-weight: bold;
+    font-size: 1.5em;
+    color: #c24445;
+}
+
+.cols {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.col-left {
+    flex: 1;
+}
+.col-right {
+    flex: 2;
+}
+
+#viz {
+    display: flex;
+    justify-content: flex-end;
+}
+</style>
+<style>
+/* DOT VISUALIZATION CSS */
 .dot {
     fill: red;
 }
@@ -20,13 +64,38 @@
 }
 </style>
 <style>
-/* legend css */
+/* LEGEND CSS */
 .legend.town.active {
     font-weight: bold;
 }
 </style>
-<div id="legend"></div>
-<div id="viz"></div>
+
+<section id="vizSection">
+    <header>
+        Community unchaining future generation<br>
+        from <strong>poverty</strong> and <strong>violence</strong>
+        through <strong>education</strong>    
+    </header>
+    <div id="vizContainer">
+        <div class="cols">
+            <div class="col-left">
+                <div class="strong-overview">
+                    <span class="strong-pct">20 %</span> of Nakuru county residents in the informal
+                    sector believe lack of education contributes to violence.
+                </div>
+                <div class="strong-overview">
+                    <span class="strong-pct">55 %</span> of women in Nakuru county informal settlements
+                    believe the county would be safe if people went to school.
+                </div>
+                <div id="legend"></div>
+            </div>
+            <div class="col-right">
+                <div id="viz"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <script src="d3/d3.min.js"></script>
 <script>
 var illiteracyData = {
@@ -87,7 +156,7 @@ function generateDatapointsForCategory (data, category) {
 
 <script>
 /** DOTS VIZUALIZATION **/
-var width = 700;
+var width = 750;
 var height = 300;
 </script>
 <script>
@@ -182,18 +251,18 @@ function makeDotVizualizer () {
             .attr('r', function (d) { return rScale(d.size) });
 
             // make the dots wobble around their positions
-            wobbleInterval = d3.interval(function () {
-                viz.selectAll('circle.dot').data(data, function(d) {return d.key})
-                    .transition()
-                    .ease(d3.easeLinear)
-                    .duration(500)
-                    .attr('cx', function (d) {
-                        return xScale(d.cx ) + deltaScale(Math.random());
-                    })
-                    .attr('cy', function (d) {
-                        return yScale(d.cy) +  deltaScale(Math.random());
-                    })
-            }, 500);
+            // wobbleInterval = d3.interval(function () {
+            //     viz.selectAll('circle.dot').data(data, function(d) {return d.key})
+            //         .transition()
+            //         .ease(d3.easeLinear)
+            //         .duration(500)
+            //         .attr('cx', function (d) {
+            //             return xScale(d.cx ) + deltaScale(Math.random());
+            //         })
+            //         .attr('cy', function (d) {
+            //             return yScale(d.cy) +  deltaScale(Math.random());
+            //         })
+            // }, 500);
         }, 1000);   
     }
 }
