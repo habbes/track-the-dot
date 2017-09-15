@@ -1,4 +1,5 @@
 <style>
+/* vizualization css */
 .dot {
     fill: red;
 }
@@ -26,8 +27,8 @@
 var illiteracyData = {
     'Naivasha': {
         town: 'Naivasha',
-        child: 15,
-        youth: 30,
+        child: 10,
+        youth: 35,
         man: 30,
         woman: 25
     },
@@ -76,10 +77,10 @@ function generateDatapointsForCategory (data, category) {
         }
     });
 }
-</script>
 
+</script>
 <script>
-var width = 600;
+var width = 700;
 var height = 300;
 </script>
 <script>
@@ -92,23 +93,23 @@ var viz = root.append('svg')
 <script>
 var rScale = d3.scaleLinear()
     .domain([0, 30])
-    .range([0, 7]);
+    .range([0, 6]);
 var xScale = d3.scaleLinear()
     .domain([0, 1])
     .range([30, width-30]);
 var yScale = d3.scaleLinear()
     .range([30, height-30]);
+
+// used make the dots move about their positions (implement wobble effect)
 var deltaScale = d3.scaleLinear()
-        .domain([0, 1])
-        .range([-1, 1]);
+    .domain([0, 1])
+    .range([-1, 1]);
 
-var wobbleInterval;
-
-function renderData(data) {
-    // clear wobble effect
-    clearInterval(wobbleInterval);
-
-    // collapse current data set
+/**
+ * implodes all the dots currently visualized
+ * into the center of the graph
+ */
+function implodeDots () {
     viz.selectAll('circle.dot')
         .transition()
         .duration(1000)
@@ -118,12 +119,30 @@ function renderData(data) {
         .attr('cy', function (d) {
             return yScale(0.5)
         });
+}
+
+// the handle for the wobble effect inverval
+var wobbleInterval;
+
+/**
+ * render dots vizualization
+ * based on the specified data
+ * @param {array} data array containing each data point/dot
+ */
+function renderData(data) {
+    // clear wobble effect
+    clearInterval(wobbleInterval);
+
+    // collapse current data set
+    implodeDots();
+
     setTimeout(function () {
         var dots = viz.selectAll('circle.dot').data(data, function (d) {return d.key})
 
         dots.exit()
         .remove();
 
+        // explode new dots from the center
         var newDots = dots.enter().append('circle')
         .classed('dot', true)
         .attr('cx', xScale(0.5))
@@ -137,7 +156,7 @@ function renderData(data) {
         .classed('man', function (d) { return d.category === 'man'})
         .classed('woman', function (d) { return d.category === 'woman'})
         .transition()
-        .duration(1000)
+        .duration(500)
         .attr('cx', function (d) {
             return xScale(d.cx);
         })
@@ -146,18 +165,19 @@ function renderData(data) {
         })
         .attr('r', function (d) { return rScale(d.size) });
 
+        // make the dots wobble around their positions
         wobbleInterval = setInterval(function () {
             viz.selectAll('circle.dot').data(data, function(d) {return d.key})
                 .transition()
                 .ease(d3.easeLinear)
-                .duration(700)
+                .duration(500)
                 .attr('cx', function (d) {
                     return xScale(d.cx ) + deltaScale(Math.random());
                 })
                 .attr('cy', function (d) {
                     return yScale(d.cy) +  deltaScale(Math.random());
                 })
-        }, 700);
+        }, 500);
     }, 1000);
     
 }
