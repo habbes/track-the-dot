@@ -1,9 +1,48 @@
 <div id="pie"></div>
 <script src="d3/d3.js"></script>
 <script>
-var data = [{key: "rest", value: 70}, {key: 'target', value: 30}];
+var categories = ['youth', 'male', 'female'];
+var data = [
+    {
+        town: 'Molo',
+        unemployed: 35.5,
+        youth: 40.3,
+        male: 33.9,
+        female: 25.8
+    },
+    {
+        town: 'Naruko Kaptenbwo',
+        unemployed: 23.8,
+        youth: 40.3,
+        male: 33.9,
+        female: 25.8
+    }
+];
 </script>
 <script>
+
+/**
+ * splits town data into two
+ * sections from which pie data
+ * can be generated
+ * @param {object} data
+ * @return {array}
+ */
+function getTownData (data) {
+    var rest = {
+        key: 'rest',
+        value: 100 - data.unemployed,
+    };
+    var target = {
+        key: 'target',
+        value: data.unemployed
+    };
+    categories.forEach(function (cat) {
+        target[cat] = data[cat];
+    });
+    return [rest, target];
+}
+
 /**
  * converts a data array into an array
  * of pie data with computed startAngle, endAngle
@@ -66,11 +105,15 @@ function getPieRotationAngle (pieData) {
  */
 function sectorCoordGenerator (radius, startAngle, endAngle) {
     var angle = (endAngle  - startAngle) / 2;
+    // get the min and max y values for coordinates in
+    // this sector
     var maxY = radius * Math.sin(angle);
     var minY = -maxY;
     var getRandomY = d3.randomUniform(minY, maxY);
     var getRandomXForY = function (y) {
-        var minX = Math.abs(y)/Math.tan(angle);
+        // get the min and max x values for the given y
+        // value in this sector
+        var minX = Math.abs(y) / Math.tan(angle);
         var maxX = Math.sqrt(radius*radius - y*y);
         return d3.randomUniform(minX, maxX)();
     }
@@ -85,6 +128,45 @@ function sectorCoordGenerator (radius, startAngle, endAngle) {
 }
 
 /**
+ * generate dots representing the people in the target
+ * sector of a particular town
+ * @param {object} townData
+ * @param {function} coordsGenerator function used to generate
+ * coords for dots
+ * @return {array}
+ */
+function generateDotsForTown (townData, coordsGenerator) {
+    var dots = categories.reduce(function(dots, cat) {
+        var categoryDots = generateDotsForCategory(townData, cat, coordsGenerator);
+        return d3.merge([dots, categoryDots]);
+    }, []);
+    return d3.shuffle(dots);
+}
+
+/**
+ * generate dots representing the people in a particular
+ * category in the given town
+ * @param {object} townData
+ * @param {string} category
+ * @param {function} coordsGenerator function used to generate coords
+ * for the dots
+ * @return {array}
+ */
+function generateDotsForCategory (townData, category, coordsGenerator) {
+    var count = Math.round(townData[category]);
+    return d3.range(count).map(function (i) {
+        var coord = coordsGenerator();
+        return {
+            category: category,
+            key: category + '_' +  i,
+            size: count,
+            cx: coord.x,
+            cy: coord.y
+        };
+    });
+}
+
+/**
  * generate dots representing the target data
  * to be displayed inside the open sector of the
  * pie
@@ -94,12 +176,7 @@ function sectorCoordGenerator (radius, startAngle, endAngle) {
 function generateSectorDots (pieData, radius) {
     var target = pieData.find(function (d) { return d.data.key === 'target'});
     var getRandomCoords = sectorCoordGenerator(radius, target.startAngle, target.endAngle);
-    var dots = d3.range(target.value).map(function (d, i) {
-       var dot = getRandomCoords();
-       dot.key = i;
-       return dot;
-    });
-    return dots;
+    return generateDotsForTown(target.data, getRandomCoords);
 }
 </script>
 <script>
@@ -178,20 +255,31 @@ function renderDots (pieData) {
     circles
         .transition()
         .attr('cx', function (d) {
-            return d.x;
+            return d.cx;
         })
         .attr('cy', function (d) {
-            return d.y;
+            return d.cy;
         })
         .attr('r', 2);
 }
 
-function renderPieAndDots (data) {
-    var pieData = getPieData(data);
+function renderPieAndDots (pieData) {
     renderPie(pieData);
     renderDots(pieData);
 }
+
+/**
+ * render entire visualization
+ * including legend
+ * @param {array} data
+ */
+function renderViz (data, activeIndex) {
+    var townData = data[activeIndex];
+    var townRawPieData = getTownData(townData);
+    var pieData = getPieData(townRawPieData);
+    renderPieAndDots(pieData);
+}
 </script>
 <script>
-renderPieAndDots(data);
+renderViz(data, 0);
 </script>
