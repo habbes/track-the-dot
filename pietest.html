@@ -146,15 +146,15 @@ function renderPie (pieData) {
     var angle = getPieRotationAngle(pieData);
     pieG.transition()
         .attr('transform', getPieRotationTransform(angle));
-    console.log(pieG);
+
     var arc = pieG.selectAll('.arc')
         .data(pieData, function (d) { return d.data.key; });
     arc.exit().remove();
-    var newArc = arc.enter().append('g')
+    var newArc = arc.enter().append('path')
         .attr('class', 'arc');
     
     arc = arc.merge(newArc);
-    arc.append('path')
+    arc.transition()
         .attr('d', pathFn)
         .attr('fill', function(d) {
             return d.data.key === 'rest'? 'red': 'white';
@@ -176,6 +176,7 @@ function renderDots (pieData) {
 
     circles = circles.merge(newCircles);
     circles
+        .transition()
         .attr('cx', function (d) {
             return d.x;
         })
@@ -184,9 +185,13 @@ function renderDots (pieData) {
         })
         .attr('r', 2);
 }
+
+function renderPieAndDots (data) {
+    var pieData = getPieData(data);
+    renderPie(pieData);
+    renderDots(pieData);
+}
 </script>
 <script>
-var pieData = getPieData(data);
-renderPie(pieData);
-renderDots(pieData);
+renderPieAndDots(data);
 </script>
