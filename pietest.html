@@ -579,7 +579,12 @@ function renderPie (pieData) {
  */
 function renderDots (dots) {
     var circles = g.selectAll('.dot').data(dots, function (dot) { return dot.key; });
-    circles.exit().remove();
+    var exitCircles = circles.exit();
+    exitCircles.transition()
+        .duration(1000)
+        .attr('cx',0)
+        .attr('cy', 0)
+        .remove();
     var newCircles = circles.enter().append('circle')
         .attr('class', 'dot')
         .attr('cx', 0)
