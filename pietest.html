@@ -20,6 +20,28 @@
 /* LEGEND CSS */
 .legend-item.active .title {
     font-weight: bold;
+    color: #c24445;
+}
+.legend-item .title {
+    color: #535553;
+    display: inline-block;
+    width: 200px;
+    margin-right: 20px;
+}
+
+.legend-item .bar-container {
+    display: inline-block;
+    width: 200px;
+    height: 20px;
+}
+
+.legend-item .bar {
+    background-color: #ddd;
+    height: 20px;
+}
+
+.legend-item.active .bar {
+    background-color: #c24445;
 }
 </style>
 <div id="viz"></div>
@@ -30,7 +52,7 @@
 var categories = ['youth', 'male', 'female'];
 var data = [
     {
-        town: 'Molo',
+        town: 'Molo Town',
         unemployed: 35.5,
         youth: 40.3,
         male: 33.9,
@@ -270,6 +292,10 @@ var pathFn = d3.arc()
 var deltaScale = d3.scaleLinear()
     .domain([0, 1])
     .range([-1, 1]);
+
+var legendBarScale = d3.scaleLinear()
+    .domain([0, d3.max(data, function (d) { return d.unemployed })])
+    .range([0, 200]);
 </script>
 <script>
 /**
@@ -397,13 +423,22 @@ function renderLegend (data, activeTown) {
     newItems
         .append('span')
         .attr('class', 'title');
+    newItems.append('div')
+        .attr('class', 'bar-container')
+        .append('div')
+        .attr('class', 'bar');
     items = items.merge(newItems);
     items
         .classed('active', function (data) {
             return data.town === activeTown;
-        })
-        .select('span.title')
+        });
+    items.select('span.title')
         .text(function (data) { return data.town });
+    items.selectAll('.bar')
+        .style('width', function (data) {
+            var w = legendBarScale(data.unemployed);
+            return w + 'px';
+        });
 }
 
 /**
