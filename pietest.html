@@ -19,13 +19,25 @@ body {
     font-weight: lighter;
 }
 
-.cols {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
+
+
+@media (min-width: 768px) {
+    .cols {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+    }
+    .col.fluid {
+        flex: 1;
+    }
 }
-.col.fluid {
-    flex: 1;
+
+@media (max-width: 767px) { 
+    .cols {
+        flex-direction: column;
+        align-items: center;
+        align-content: center;
+    }
 }
 
 .section-overview {
@@ -86,6 +98,9 @@ body {
 }
 .dot.female {
     fill: #f3dada;
+}
+.dot.generic {
+    fill: #c24445;
 }
 </style>
 <style>
@@ -224,6 +239,11 @@ var data = [
         female: 25.8
     },
 ];
+var overallUnemployment = {
+    youth: 40.3,
+    male: 33.9,
+    female: 25.8
+};
 </script>
 <script>
 
@@ -299,6 +319,26 @@ function getPieRotationAngle (pieData) {
 }
 
 /**
+ * returns a function which, when called,returns
+ * a random coordinate in the specified range
+ * @param {number} minX
+ * @param {number} maxX
+ * @param {number} minY
+ * @param {number} maxY
+ * @return {function}
+ */
+function freeCoordGenerator (minX, maxX, minY, maxY) {
+    var getRandomX = d3.randomUniform(minX, maxX);
+    var getRandomY = d3.randomUniform(minY, maxY);
+    return function () {
+        return {
+            x: getRandomX(),
+            y: getRandomY()
+        }
+    }
+}
+
+/**
  * returns a function with generates coordinates
  * for dots that are constrained within the open sector
  * of the pie
@@ -337,6 +377,21 @@ function sectorCoordGenerator (pieRadius, dotRadius, startAngle, endAngle) {
 }
 
 /**
+ * generates categorizied dots to be displayed at random positions
+ * within the specified coordinate ranges
+ * @return {array}
+ */
+function generateFreeDots (data, minX, maxX, minY, maxY) {
+    var generateCoords = freeCoordGenerator(minX, maxX, minY, maxY);
+    console.log('data', data);
+    var dots = categories.reduce(function (dots, cat) {
+        var categoryDots = generateDotsForCategory(data, cat, generateCoords);
+        return d3.merge([dots, categoryDots]);
+    }, []);
+    return d3.shuffle(dots);
+}
+
+/**
  * generate dots representing the people in the target
  * sector of a particular town
  * @param {object} townData
@@ -345,10 +400,15 @@ function sectorCoordGenerator (pieRadius, dotRadius, startAngle, endAngle) {
  * @return {array}
  */
 function generateDotsForTown (townData, coordsGenerator) {
-    var dots = categories.reduce(function(dots, cat) {
-        var categoryDots = generateDotsForCategory(townData, cat, coordsGenerator);
-        return d3.merge([dots, categoryDots]);
-    }, []);
+    var count = Math.round(townData.value);
+    var dots = d3.range(count).map(function (i) {
+        var coord = coordsGenerator();
+        return {
+            key: i,
+            cx: coord.x,
+            cy: coord.y
+        }
+    });
     return d3.shuffle(dots);
 }
 
@@ -393,7 +453,7 @@ function generateSectorDots (pieData, pieRadius, dotRadius) {
 <script>
 var width = 500;
 var height = 400;
-var mainRadius = (Math.min(width, height) / 2) - 80;
+var mainRadius = (Math.min(width, height) / 2) - 40;
 var maxDotRadius = 4;
 </script>
 <script>
@@ -438,6 +498,39 @@ var legendBarScale = d3.scaleLinear()
     .range([0, 200]);
 </script>
 <script>
+function renderFreeDots (data, endCb) {
+    var maxX = width/2;
+    var minX = -maxX;
+    var maxY = height/2;
+    var minY = -maxY;
+    var dots = generateFreeDots(data, minX, maxX, minY, maxY);
+    var circles = g.selectAll('.dot').data(dots, function (d) { return d.key });
+    var newCircles = circles.enter()
+        .append('circle')
+        .classed('dot', true)
+        .attr('cx', 0)
+        .attr('cy', 0);
+    circles = circles.merge(newCircles);
+    circles
+        .classed('female', function (d) {
+            return d.category === 'female';
+        })
+        .classed('male', function (d) {
+            return d.category === 'male';
+        })
+        .classed('youth', function (d) {
+            return d.category === 'youth';
+        })
+        .transition()
+        .duration(1000)
+        .attr('cx', function (d) {
+            return d.cx;
+        })
+        .attr('cy', function (d) {
+            return d.cy;
+        })
+        .attr('r', maxDotRadius);
+}
 /**
  * renders the pie chart with the specified pie data
  * @param {array} pieData data that has been passed
@@ -450,7 +543,6 @@ function renderPie (pieData) {
         .data(pieData, function (d) { return d.data.key; });
     arc.exit().remove();
     var newArc = arc.enter().append('path')
-        // .attr('class', 'arc')
         .classed('arc', true)
         .classed('rest', function (d) {
             return d.data.key === 'rest';
@@ -484,15 +576,7 @@ function renderDots (dots) {
 
     circles = circles.merge(newCircles);
     circles
-        .classed('youth', function (d) {
-            return d.category === 'youth';
-        })
-        .classed('male', function (d) {
-            return d.category === 'male';
-        })
-        .classed('female', function (d) {
-            return d.category === 'female';
-        })
+        .classed('generic', true)
         .transition()
         .duration(1000)
         .attr('cx', function (d) {
@@ -619,5 +703,6 @@ function renderViz (data, activeIndex) {
 }
 </script>
 <script>
-vizLoop(data, 7000);
+renderFreeDots(overallUnemployment);
+// vizLoop(data, 7000);
 </script>
