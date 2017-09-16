@@ -1,3 +1,21 @@
+<style>
+/* VISUALIZATION CSS */
+.rest {
+    fill: #c24445;
+}
+.target {
+    fill: #fff;
+}
+.dot.youth {
+    fill: #c24445;
+}
+.dot.male {
+    fill: #da8e8f;
+}
+.dot.female {
+    fill: #f3dada;
+}
+</style>
 <div id="pie"></div>
 <script src="d3/d3.js"></script>
 <script>
@@ -221,21 +239,28 @@ var pathFn = d3.arc()
  */
 function renderPie (pieData) {
     var angle = getPieRotationAngle(pieData);
-    pieG.transition()
-        .attr('transform', getPieRotationTransform(angle));
 
     var arc = pieG.selectAll('.arc')
         .data(pieData, function (d) { return d.data.key; });
     arc.exit().remove();
     var newArc = arc.enter().append('path')
-        .attr('class', 'arc');
+        // .attr('class', 'arc')
+        .classed('arc', true)
+        .classed('rest', function (d) {
+            return d.data.key === 'rest';
+        })
+        .classed('target', function (d) {
+            return d.data.key === 'target';
+        });
     
     arc = arc.merge(newArc);
-    arc.transition()
-        .attr('d', pathFn)
-        .attr('fill', function(d) {
-            return d.data.key === 'rest'? 'red': 'white';
-        });
+    arc
+        .transition(1000)
+        .attr('d', pathFn);
+    
+    pieG.transition()
+    .duration(1000)
+    .attr('transform', getPieRotationTransform(angle));
 }
 
 /**
@@ -249,18 +274,30 @@ function renderDots (pieData) {
     var circles = g.selectAll('.dot').data(dots, function (dot) { return dot.key; });
     circles.exit().remove();
     var newCircles = circles.enter().append('circle')
-        .attr('class', 'dot');
+        .attr('class', 'dot')
+        .attr('cx', 0)
+        .attr('cy', 0);
 
     circles = circles.merge(newCircles);
     circles
+        .classed('youth', function (d) {
+            return d.category === 'youth';
+        })
+        .classed('male', function (d) {
+            return d.category === 'male';
+        })
+        .classed('female', function (d) {
+            return d.category === 'female';
+        })
         .transition()
+        .duration(1000)
         .attr('cx', function (d) {
             return d.cx;
         })
         .attr('cy', function (d) {
             return d.cy;
         })
-        .attr('r', 2);
+        .attr('r', 4);
 }
 
 function renderPieAndDots (pieData) {
