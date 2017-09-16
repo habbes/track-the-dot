@@ -16,7 +16,15 @@
     fill: #f3dada;
 }
 </style>
-<div id="pie"></div>
+<style>
+/* LEGEND CSS */
+.legend-item.active .title {
+    font-weight: bold;
+}
+</style>
+<div id="viz"></div>
+<div id="legend">
+</div>
 <script src="d3/d3.js"></script>
 <script>
 var categories = ['youth', 'male', 'female'];
@@ -230,7 +238,7 @@ var mainRadius = Math.min(width, height) / 2;
 var maxDotRadius = 4;
 </script>
 <script>
-var root = d3.select("#pie");
+var root = d3.select("#viz");
 var svg = root.append('svg')
     .attr('width', width)
     .attr('height', height);
@@ -330,6 +338,12 @@ function renderDots (dots) {
         .attr('r', maxDotRadius);
 }
 
+/**
+ * returns a function that can render dots
+ * with a wobbling effect in the open sector
+ * of the pie
+ * @return {function}
+ */
 function makeWobblingDotsRenderer () {
     // wrap the function in a closure so
     // that the wobbleInterval handle is not
@@ -360,9 +374,36 @@ function makeWobblingDotsRenderer () {
 }
 
 var renderWobblingDots = makeWobblingDotsRenderer();
+
+/**
+ * renders the pie chart and
+ * dots representing the people in
+ * the open sector
+ * @param {array} pieData data that has 
+ * passed through the `getPieData` function
+ */
 function renderPieAndDots (pieData) {
     renderPie(pieData);
     renderWobblingDots(pieData);
+}
+
+function renderLegend (data, activeTown) {
+    var items = d3.select('#legend')
+        .selectAll('.legend-item').data(data);
+    items.exit().remove();
+    var newItems = items.enter()
+        .append('div')
+        .classed('legend-item', true);
+    newItems
+        .append('span')
+        .attr('class', 'title');
+    items = items.merge(newItems);
+    items
+        .classed('active', function (data) {
+            return data.town === activeTown;
+        })
+        .select('span.title')
+        .text(function (data) { return data.town });
 }
 
 /**
@@ -375,6 +416,8 @@ function renderViz (data, activeIndex) {
     var townRawPieData = getTownData(townData);
     var pieData = getPieData(townRawPieData);
     renderPieAndDots(pieData);
+    var activeTown = data[activeIndex].town;
+    renderLegend(data, activeTown);
 }
 
 /**
