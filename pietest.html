@@ -5,6 +5,20 @@ body {
     color: #535553;
 }
 
+.section-header {
+    text-transform: uppercase;
+    color: #c35656;
+}
+
+.section-header .title {
+    font-weight: bold;
+}
+
+.section-header .subtitle {
+    font-size: 0.9em;
+    font-weight: lighter;
+}
+
 .cols {
     display: flex;
     flex-direction: row;
@@ -124,49 +138,52 @@ body {
     vertical-align: text-bottom;
 }
 </style>
-<div class="cols">
-    <div class="col fluid">
-        <div id="viz"></div>
-        <div id="legendContainer">
-            <div class="legend-overview">
-                Percentages of unemployment in 5 towns of Kenya
-            </div>
-            <div id="legend"></div>
-        </div>
-    </div>
-    <div class="col fluid">
-        <div class="section-overview">
-            According to this research on Nakuru
-            county, <strong>81 %</strong> admitted that unemployed
-            peopleespecially youths are susceptible
-            to engage in urban violence
-        </div>
-        <p class="inverted">
-            <span>In communities of Molo, Nakuru and Naivasha,</span> <br>
-            <span>gang related violence, political and sexual</span><br>
-            <span>violence have been mostly manifested and</span><br>
-            <span>attributed to idleness due to unemployment.</span><br>
-            <span>This research observed that youths, women and</span><br>
-            <span>children were the most victims of violence, gender-based</span><br>
-            <span>violence including sexual violence and child</span><br>
-            <span>abuse was highly manifested in households against</span><br>
-            <span>women and children respectively. In communities</span><br>
-            <span>of Molo, Nakuru and Naivasha, gang related violence,</span><br>
-            <span>political and sexual violence have been mostly</span><br>
-            <span>manifested and attributed to idleness due to</span><br>
-            <span>unemployment.</span><br>
-        </p>
-        <div class="actions-container">
-            <div class="actions">
-                <div class="action-link call-to-action">Call to action <span class="action-arrow">»</span></div>
-                <div class="action-link">More info</div>
-                <div class="action-link">Report</div>
+<section id="vizSection">
+    <header class="section-header">
+        <h2><span class="title">Unemployment: </span><span class="subtitle">The enemy within</span></h2>
+    </header>
+    <div class="cols">
+        <div class="col fluid">
+            <div id="viz"></div>
+            <div id="legendContainer">
+                <div class="legend-overview">
+                    Percentages of unemployment in 5 towns of Kenya
+                </div>
+                <div id="legend"></div>
             </div>
         </div>
+        <div class="col fluid">
+            <div class="section-overview">
+                According to this research on Nakuru
+                county, <strong>81 %</strong> admitted that unemployed
+                peopleespecially youths are susceptible
+                to engage in urban violence
+            </div>
+            <p class="inverted">
+                <span>In communities of Molo, Nakuru and Naivasha,</span> <br>
+                <span>gang related violence, political and sexual</span><br>
+                <span>violence have been mostly manifested and</span><br>
+                <span>attributed to idleness due to unemployment.</span><br>
+                <span>This research observed that youths, women and</span><br>
+                <span>children were the most victims of violence, gender-based</span><br>
+                <span>violence including sexual violence and child</span><br>
+                <span>abuse was highly manifested in households against</span><br>
+                <span>women and children respectively. In communities</span><br>
+                <span>of Molo, Nakuru and Naivasha, gang related violence,</span><br>
+                <span>political and sexual violence have been mostly</span><br>
+                <span>manifested and attributed to idleness due to</span><br>
+                <span>unemployment.</span><br>
+            </p>
+            <div class="actions-container">
+                <div class="actions">
+                    <div class="action-link call-to-action">Call to action <span class="action-arrow">»</span></div>
+                    <div class="action-link">More info</div>
+                    <div class="action-link">Report</div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
-
-</div>
+</section>
 <script src="d3/d3.js"></script>
 <script>
 var categories = ['youth', 'male', 'female'];
