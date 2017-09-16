@@ -349,7 +349,24 @@ function renderViz (data, activeIndex) {
     var pieData = getPieData(townRawPieData);
     renderPieAndDots(pieData);
 }
+
+/**
+ * render the vizualization in a loop,
+ * changing the active town after the
+ * specified interval
+ * @param {array} data
+ * @param {number} interval
+ */
+ function vizLoop (data, interval) {
+    // show the viz the first time
+    renderViz(data, 0);
+    var index = 1;
+    d3.interval(function () {
+        renderViz(data, index);
+        index = (index + 1) % data.length;
+    }, interval);
+}
 </script>
 <script>
-renderViz(data, 0);
+vizLoop(data, 3000);
 </script>
