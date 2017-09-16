@@ -383,7 +383,6 @@ function sectorCoordGenerator (pieRadius, dotRadius, startAngle, endAngle) {
  */
 function generateFreeDots (data, minX, maxX, minY, maxY) {
     var generateCoords = freeCoordGenerator(minX, maxX, minY, maxY);
-    console.log('data', data);
     var dots = categories.reduce(function (dots, cat) {
         var categoryDots = generateDotsForCategory(data, cat, generateCoords);
         return d3.merge([dots, categoryDots]);
@@ -498,6 +497,15 @@ var legendBarScale = d3.scaleLinear()
     .range([0, 200]);
 </script>
 <script>
+/**
+ * render dots at random positions of the chart
+ * used to visualize overall data before leading
+ * into displaying pie charts for specific towns
+ * @param {object} data
+ * @param {function} endCb callback called
+ * after the dots have imploded and been removed
+ * from the view
+ */
 function renderFreeDots (data, endCb) {
     var maxX = width/2;
     var minX = -maxX;
@@ -543,6 +551,7 @@ function renderFreeDots (data, endCb) {
         
     }, 5000);
 }
+
 /**
  * renders the pie chart with the specified pie data
  * @param {array} pieData data that has been passed
@@ -709,6 +718,8 @@ function renderViz (data, activeIndex) {
  * @param {number} interval
  */
  function vizLoop (data, initialDelay, interval) {
+    // display an exploding circle first
+    // then loop through the town pie charts
     var tempPie = g.append('circle')
         .attr('class', 'rest')
         .attr('r', 0);
@@ -732,5 +743,4 @@ function renderViz (data, activeIndex) {
 renderFreeDots(overallUnemployment, function () {
     vizLoop(data, 1000, 5000);
 });
-// vizLoop(data, 7000);
 </script>
