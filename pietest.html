@@ -1,5 +1,14 @@
 <style>
+/* PAGE LAYOUT CSS */
+body {
+    font-family: Helvetica, Arial, sans-serif
+}
+</style>
+<style>
 /* VISUALIZATION CSS */
+#viz {
+    border: 4px solid #dddbda;
+}
 .rest {
     fill: #c24445;
 }
@@ -25,23 +34,41 @@
 .legend-item .title {
     color: #535553;
     display: inline-block;
-    width: 200px;
+    width: 150px;
     margin-right: 20px;
+    height: 20px;
+    vertical-align: text-bottom;
 }
 
 .legend-item .bar-container {
     display: inline-block;
     width: 200px;
-    height: 20px;
+    padding-top: 2.5px;
+    padding-bottom: 2.5px;
+    margin-right: 10px;
+    height:20px;
+    box-sizing: border-box;
 }
 
 .legend-item .bar {
     background-color: #ddd;
-    height: 20px;
+    height: 15px;
 }
 
 .legend-item.active .bar {
     background-color: #c24445;
+}
+
+.legend-item .value {
+    display: none;
+}
+.legend-item.active .value {
+    display: inline-block;
+    font-weight: bold;
+    color: #535553;
+    font-size: 1.1em;
+    height: 20px;
+    vertical-align: text-bottom;
 }
 </style>
 <div id="viz"></div>
@@ -256,7 +283,7 @@ function generateSectorDots (pieData, pieRadius, dotRadius) {
 <script>
 var width = 700;
 var height = 300;
-var mainRadius = Math.min(width, height) / 2;
+var mainRadius = (Math.min(width, height) / 2) - 40;
 var maxDotRadius = 4;
 </script>
 <script>
@@ -421,23 +448,29 @@ function renderLegend (data, activeTown) {
         .append('div')
         .classed('legend-item', true);
     newItems
-        .append('span')
+        .append('div')
         .attr('class', 'title');
     newItems.append('div')
         .attr('class', 'bar-container')
         .append('div')
         .attr('class', 'bar');
+    newItems.append('div')
+        .attr('class', 'value');
     items = items.merge(newItems);
     items
         .classed('active', function (data) {
             return data.town === activeTown;
         });
-    items.select('span.title')
+    items.select('.title')
         .text(function (data) { return data.town });
     items.selectAll('.bar')
         .style('width', function (data) {
             var w = legendBarScale(data.unemployed);
             return w + 'px';
+        });
+    items.selectAll('.value')
+        .text(function (data) {
+            return data.unemployed + ' %';
         });
 }
 
@@ -466,10 +499,10 @@ function renderViz (data, activeIndex) {
     // show the viz the first time
     renderViz(data, 0);
     var index = 1;
-    d3.interval(function () {
-        renderViz(data, index);
-        index = (index + 1) % data.length;
-    }, interval);
+    // d3.interval(function () {
+    //     renderViz(data, index);
+    //     index = (index + 1) % data.length;
+    // }, interval);
 }
 </script>
 <script>
