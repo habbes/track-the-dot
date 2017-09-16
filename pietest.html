@@ -230,6 +230,11 @@ var pieG = g.append('g');
 var pathFn = d3.arc()
     .outerRadius(mainRadius)
     .innerRadius(0);
+
+// used make the dots move about their positions (implement wobble effect)
+var deltaScale = d3.scaleLinear()
+    .domain([0, 1])
+    .range([-1, 1]);
 </script>
 <script>
 /**
@@ -266,11 +271,9 @@ function renderPie (pieData) {
 /**
  * render dots representing the target population
  * in the open sector of the pie chart
- * @param {array} pieData data that has been passed
- * through getPieData function
+ * @param {array} dots dots generated for the open sector
  */
-function renderDots (pieData) {
-    var dots = generateSectorDots(pieData, mainRadius);
+function renderDots (dots) {
     var circles = g.selectAll('.dot').data(dots, function (dot) { return dot.key; });
     circles.exit().remove();
     var newCircles = circles.enter().append('circle')
@@ -300,9 +303,39 @@ function renderDots (pieData) {
         .attr('r', 4);
 }
 
+function makeWobblingDotsRenderer () {
+    // wrap the function in a closure so
+    // that the wobbleInterval handle is not
+    // exposed in the global namespace
+
+    // the handle for the wobble effect inverval
+    var wobbleInterval;
+
+    return function (pieData) {
+        wobbleInterval && wobbleInterval.stop();
+        var dots = generateSectorDots(pieData, mainRadius);
+        renderDots(dots);
+        
+        // make the dots wobble around their positions
+        wobbleInterval = d3.interval(function () {
+            g.selectAll('circle.dot').data(dots, function(d) {return d.key})
+                .transition()
+                .ease(d3.easeLinear)
+                .duration(500)
+                .attr('cx', function (d) {
+                    return d.cx + deltaScale(Math.random());
+                })
+                .attr('cy', function (d) {
+                    return d.cy +  deltaScale(Math.random());
+                })
+        }, 500);
+    }
+}
+
+var renderWobblingDots = makeWobblingDotsRenderer();
 function renderPieAndDots (pieData) {
     renderPie(pieData);
-    renderDots(pieData);
+    renderWobblingDots(pieData);
 }
 
 /**
