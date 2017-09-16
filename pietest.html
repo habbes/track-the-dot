@@ -454,7 +454,7 @@ function generateSectorDots (pieData, pieRadius, dotRadius) {
 var width = 500;
 var height = 400;
 var mainRadius = (Math.min(width, height) / 2) - 40;
-var maxDotRadius = 4;
+var maxDotRadius = 6;
 </script>
 <script>
 var root = d3.select("#viz");
@@ -530,6 +530,18 @@ function renderFreeDots (data, endCb) {
             return d.cy;
         })
         .attr('r', maxDotRadius);
+    
+    
+    setTimeout(function () {
+        setTimeout(endCb, 1000);
+        circles
+            .transition()
+            .duration(1000)
+            .attr('cx', 0)
+            .attr('cy', 0)
+            .remove();
+        
+    }, 5000);
 }
 /**
  * renders the pie chart with the specified pie data
@@ -550,8 +562,7 @@ function renderPie (pieData) {
         .classed('target', function (d) {
             return d.data.key === 'target';
         });
-    
-    arc = arc.merge(newArc);
+        arc = arc.merge(newArc);
     arc
         .transition(1000)
         .attr('d', pathFn);
@@ -692,17 +703,29 @@ function renderViz (data, activeIndex) {
  * @param {array} data
  * @param {number} interval
  */
- function vizLoop (data, interval) {
-    // show the viz the first time
-    renderViz(data, 0);
-    var index = 1;
-    d3.interval(function () {
-        renderViz(data, index);
-        index = (index + 1) % data.length;
-    }, interval);
+ function vizLoop (data, initialDelay, interval) {
+    var tempPie = g.append('circle')
+        .attr('class', 'rest')
+        .attr('r', 0);
+    tempPie
+        .transition(initialDelay)
+        .attr('r', mainRadius);
+    setTimeout(function () {
+        tempPie.remove();
+        // show the viz the first time
+        renderViz(data, 0, true);
+        var index = 1;
+        d3.interval(function () {
+            renderViz(data, index);
+            index = (index + 1) % data.length;
+        }, interval);
+    }, initialDelay);
+    
 }
 </script>
 <script>
-renderFreeDots(overallUnemployment);
+renderFreeDots(overallUnemployment, function () {
+    vizLoop(data, 1000, 5000);
+});
 // vizLoop(data, 7000);
 </script>
