@@ -135,25 +135,28 @@ function getPieRotationAngle (pieData) {
  * returns a function with generates coordinates
  * for dots that are constrained within the open sector
  * of the pie
- * @param {number} radius the radius of the pie
+ * @param {number} pieRadius the radius of the pie
+ * @param {number} dotRadius max radius of a dot
  * @param {number} startAngle the start angle of the open sector in radians
  * @param {number} endAngle the end angle of the open sector in radians
  * @return {function} a function that, when called, returns an object
  * {x, y} where x and y are coordinates for a random point within the
  * specified open sector
  */
-function sectorCoordGenerator (radius, startAngle, endAngle) {
+function sectorCoordGenerator (pieRadius, dotRadius, startAngle, endAngle) {
     var angle = (endAngle  - startAngle) / 2;
     // get the min and max y values for coordinates in
     // this sector
-    var maxY = radius * Math.sin(angle);
-    var minY = -maxY;
+    // offset the coords by the max dot radius so that they
+    // don't overlap with the sector boundaries
+    var maxY = pieRadius * Math.sin(angle) - dotRadius;
+    var minY = -maxY + dotRadius;
     var getRandomY = d3.randomUniform(minY, maxY);
     var getRandomXForY = function (y) {
         // get the min and max x values for the given y
         // value in this sector
-        var minX = Math.abs(y) / Math.tan(angle);
-        var maxX = Math.sqrt(radius*radius - y*y);
+        var minX = Math.abs(y) / Math.tan(angle) + dotRadius;
+        var maxX = Math.sqrt(pieRadius*pieRadius - y*y) - dotRadius;
         return d3.randomUniform(minX, maxX)();
     }
     return function () {
@@ -210,11 +213,13 @@ function generateDotsForCategory (townData, category, coordsGenerator) {
  * to be displayed inside the open sector of the
  * pie
  * @param {array} pieData
+ * @param {number} pieRadius the radius of the pie
+ * @param {number} dotRadius the max radius of a dot
  * @return {array}
  */
-function generateSectorDots (pieData, radius) {
+function generateSectorDots (pieData, pieRadius, dotRadius) {
     var target = pieData.find(function (d) { return d.data.key === 'target'});
-    var getRandomCoords = sectorCoordGenerator(radius, target.startAngle, target.endAngle);
+    var getRandomCoords = sectorCoordGenerator(pieRadius, dotRadius, target.startAngle, target.endAngle);
     return generateDotsForTown(target.data, getRandomCoords);
 }
 </script>
@@ -222,6 +227,7 @@ function generateSectorDots (pieData, radius) {
 var width = 700;
 var height = 300;
 var mainRadius = Math.min(width, height) / 2;
+var maxDotRadius = 4;
 </script>
 <script>
 var root = d3.select("#pie");
@@ -321,7 +327,7 @@ function renderDots (dots) {
         .attr('cy', function (d) {
             return d.cy;
         })
-        .attr('r', 4);
+        .attr('r', maxDotRadius);
 }
 
 function makeWobblingDotsRenderer () {
@@ -334,7 +340,7 @@ function makeWobblingDotsRenderer () {
 
     return function (pieData) {
         wobbleInterval && wobbleInterval.stop();
-        var dots = generateSectorDots(pieData, mainRadius);
+        var dots = generateSectorDots(pieData, mainRadius, maxDotRadius);
         renderDots(dots);
         
         // make the dots wobble around their positions
